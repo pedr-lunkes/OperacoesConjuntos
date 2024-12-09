@@ -8,6 +8,7 @@
     #include "item.h"
 
     typedef struct avl_ AVL;
+    typedef struct no_ NO;
 
     AVL *avl_criar(void);
     void avl_apagar(AVL **T);

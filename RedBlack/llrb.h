@@ -4,6 +4,7 @@
     #include <stdbool.h>
 
     typedef struct llrb_ LLRB;
+    typedef struct no_ NO;
 
     LLRB *llrb_criar(void);
     void llrb_apagar(LLRB **T);
