@@ -3,6 +3,9 @@
     #include "item.h"
     #include <stdbool.h>
 
+    #define BLACK false
+    #define RED true
+
     typedef struct llrb_ LLRB;
 
     LLRB *llrb_criar(void);

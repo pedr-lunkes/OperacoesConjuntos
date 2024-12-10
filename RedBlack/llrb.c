@@ -71,7 +71,7 @@ NO *llrb_cria_no(ITEM *item){
     if(novo != NULL){
         novo->esq = NULL;
         novo->dir = NULL;
-        novo->cor = true; // true - Vermelho / false - preto
+        novo->cor = RED;
         novo->item = item;
     }
 
@@ -82,15 +82,17 @@ bool Vermelho(NO *raiz){
     if(raiz != NULL)
         return raiz->cor;
 
-    return false;   
+    return BLACK;   
 }
 
 void inverte(NO *raiz){
-    raiz->cor = !raiz->cor;
-    if(raiz->esq)
-        raiz->esq->cor = !raiz->esq->cor;
-    if(raiz->dir)
-        raiz->dir->cor = !raiz->dir->cor;
+    if(raiz != NULL){
+        raiz->cor = !raiz->cor;
+        if(raiz->esq)
+            raiz->esq->cor = !raiz->esq->cor;
+        if(raiz->dir)
+            raiz->dir->cor = !raiz->dir->cor;
+    }
 
     return;
 }
@@ -100,7 +102,7 @@ NO *rodar_direita(NO *a){
     a->esq = b->dir;
     b->dir = a;
     b->cor = a->cor;
-    a->cor = true;
+    a->cor = RED;
 
     return b;
 }
@@ -110,9 +112,22 @@ NO *rodar_esquerda(NO *a){
     a->dir = b->esq;
     b->esq = a;
     b->cor = a->cor;
-    a->cor = true;
+    a->cor = RED;
 
     return b;
+}
+
+NO *balanceia(NO *raiz){
+    if(raiz != NULL){
+        if(Vermelho(raiz->dir) && !Vermelho(raiz->esq))
+            raiz = rodar_esquerda(raiz);
+        if((raiz->esq != NULL && Vermelho(raiz->dir)) && Vermelho(raiz->esq->esq) )
+            raiz = rodar_direita(raiz);
+        if(Vermelho(raiz->esq) && Vermelho(raiz->dir))
+            inverte(raiz);
+    }
+
+    return raiz;
 }
 
 NO *llrb_inserir_no(NO *raiz, NO *novo){
@@ -127,7 +142,7 @@ NO *llrb_inserir_no(NO *raiz, NO *novo){
 
     if(Vermelho(raiz->dir) && !Vermelho(raiz->esq))
         raiz = rodar_esquerda(raiz);
-    if(Vermelho(raiz->esq->esq) && Vermelho(raiz->esq))
+    if(Vermelho(raiz->esq) && Vermelho(raiz->esq->esq))
         raiz = rodar_direita(raiz);
     if(Vermelho(raiz->esq) && Vermelho(raiz->dir))
         inverte(raiz);
@@ -140,7 +155,7 @@ bool llrb_inserir(LLRB *T, ITEM *item){
         NO *novo = llrb_cria_no(item);
         if(novo != NULL){
             T->raiz = llrb_inserir_no(T->raiz, novo);
-            T->raiz->cor = false;
+            T->raiz->cor = BLACK;
             return true;
         }
     }
@@ -148,25 +163,9 @@ bool llrb_inserir(LLRB *T, ITEM *item){
     return false;
 }
 
-NO *troca_max_esq(NO *raiz, NO *ant, NO *troca){
-    if(troca->dir != NULL)
-        troca_max_esq(raiz, troca, troca->dir);
-
-    if(ant == raiz)
-        ant->esq = troca->esq;
-    else
-        ant->dir = troca->esq;
-
-    item_apagar(&raiz->item);
-    raiz->item = troca->item;
-    free(troca);
-    troca = NULL;
-}
-
 NO *move_red_esq(NO *raiz) {
     inverte(raiz);
-    
-    if (Vermelho(raiz->dir->esq)) {
+    if(Vermelho(raiz->dir->esq)){
         raiz->dir = rodar_direita(raiz->dir);
         raiz = rodar_esquerda(raiz);
         inverte(raiz);
@@ -177,122 +176,81 @@ NO *move_red_esq(NO *raiz) {
 
 NO *move_red_dir(NO *raiz) {
     inverte(raiz);
-
-    if (Vermelho(raiz->esq->esq)) {
+    if(Vermelho(raiz->esq->esq)){
         raiz = rodar_direita(raiz);
         inverte(raiz);
     }
-
     return raiz;
 }
 
-NO *llrb_remover_no(NO **raiz, int chave){
-    if (*raiz == NULL)
-        return NULL;
+NO *min(NO *raiz){
+    NO *aux = raiz;
+    NO *tmp = raiz->esq;
 
-    if(item_get_chave((*raiz)->item) > chave){
-        if (!Vermelho((*raiz)->esq) && !Vermelho((*raiz)->esq ? (*raiz)->esq->esq : NULL)) 
-            *raiz = move_red_esq(*raiz);
-
-        (*raiz)->esq = llrb_remover_no(&(*raiz)->esq, chave);
-    } else{
-        if(Vermelho((*raiz)->esq))
-            *raiz = rodar_direita(*raiz);
-
-        if(item_get_chave((*raiz)->item) == chave && (*raiz)->dir == NULL){
-            NO *p = *raiz;
-            *raiz = (*raiz)->esq;
-            item_apagar(&(p->item));
-            free(p);
-            p = NULL;
-            return *raiz;
-        }
-
-        if(!Vermelho((*raiz)->dir) && !Vermelho((*raiz)->dir ? (*raiz)->dir->esq : NULL))
-            *raiz = move_red_dir(*raiz);
-
-        if(item_get_chave((*raiz)->item) == chave){
-            NO *p = *raiz;
-            if((*raiz)->esq == NULL || (*raiz)->dir == NULL){
-                if((*raiz)->esq == NULL)
-                    *raiz = (*raiz)->dir;
-                else
-                    *raiz = (*raiz)->esq;
-                
-                item_apagar(&(p->item));
-                free(p);
-                p = NULL;
-            } else
-                troca_max_esq(*raiz, *raiz, (*raiz)->esq);
-        }
-        else
-            (*raiz)->dir = llrb_remover_no(&(*raiz)->dir, chave);
+    while(tmp != NULL){
+        aux = tmp;
+        tmp = tmp->esq;
     }
 
-    if(*raiz != NULL){
-        if(Vermelho((*raiz)->dir) && !Vermelho((*raiz)->esq))
-            *raiz = rodar_esquerda(*raiz);
-        if(Vermelho((*raiz)->esq) && Vermelho((*raiz)->esq->esq))
-            *raiz = rodar_direita(*raiz);
-        if(Vermelho((*raiz)->esq) && Vermelho((*raiz)->dir))
-            inverte(*raiz);
-    }
-
-    return *raiz;
+    return aux;
 }
 
-// NO *llrb_remover_no(NO **raiz, int chave) {
-//     if (*raiz == NULL)
-//         return NULL;
+NO *removeMin(NO *raiz){
+    if(raiz->esq == NULL){
+        item_apagar(&raiz->item);
+        free(raiz);
+        raiz = NULL;
+        return NULL;
+    }
+    
+    if(!Vermelho(raiz->esq) && !Vermelho(raiz->esq->esq))
+        raiz = move_red_esq(raiz);
 
-//     if(chave == item_get_chave((*raiz)->item)) {
-//         NO *p = *raiz;
-//         if((*raiz)->esq == NULL || (*raiz)->dir == NULL){
-//             if((*raiz)->esq == NULL)
-//                 *raiz = (*raiz)->dir;
-//             else
-//                 *raiz = (*raiz)->esq;
-            
-//             item_apagar(&(p->item));
-//             free(p);
-//             p = NULL;
-//         } else
-//             troca_max_esq(*raiz, *raiz, (*raiz)->esq);
-//     }
+    raiz->esq = removeMin(raiz->esq);
+    return balanceia(raiz);
+}
 
-//     else if (item_get_chave((*raiz)->item) > chave){
-//         if (!Vermelho((*raiz)->esq) && !Vermelho((*raiz)->esq ? (*raiz)->esq->esq : NULL)) 
-//             *raiz = move_red_esq(*raiz);
+NO *llrb_remover_no(NO *raiz, int chave) {
+    if(raiz == NULL)
+        return NULL;
+    
+    if(chave < item_get_chave(raiz->item)){
+        if(!Vermelho(raiz->esq) && (raiz->esq != NULL && !Vermelho(raiz->esq->esq)))
+            raiz = move_red_esq(raiz);
 
-//         (*raiz)->esq = llrb_remover_no(&(*raiz)->esq, chave);
-
-//     } else{
-//         if(Vermelho((*raiz)->esq))
-//             raiz = rodar_esquerda(raiz);
-
-//         if (!Vermelho((*raiz)->dir) && !Vermelho((*raiz)->dir ? (*raiz)->dir->esq : NULL))
-//             *raiz = move_red_dir(*raiz);
+        raiz->esq = llrb_remover_no(raiz->esq, chave);
+    }
+    else{
+        if(Vermelho(raiz->esq))
+            raiz = rodar_direita(raiz);
         
-//         (*raiz)->dir = llrb_remover_no(&(*raiz)->dir, chave);
-//     }
+        if(item_get_chave(raiz->item) == chave && raiz->dir == NULL){
+            item_apagar(&raiz->item);
+            free(raiz);
+            raiz = NULL;
+            return NULL;
+        }
 
-//     if(*raiz != NULL){
-//         if(Vermelho((*raiz)->dir) && !Vermelho((*raiz)->esq))
-//             *raiz = rodar_esquerda(*raiz);
-//         if(Vermelho((*raiz)->esq->esq) && Vermelho((*raiz)->esq))
-//             *raiz = rodar_direita(*raiz);
-//         if(Vermelho((*raiz)->esq) && Vermelho((*raiz)->dir))
-//             inverte(*raiz);
-//     }
+        if(!Vermelho(raiz->dir) && (raiz->dir != NULL && !Vermelho(raiz->dir->esq)))
+            raiz = move_red_dir(raiz);
 
-//     return *raiz;
-// }
+        if(item_get_chave(raiz->item) == chave){
+            NO *p = min(raiz->dir);
+            raiz->item = p->item;
+            raiz->dir = removeMin(raiz->dir);
+        }
+        else
+            raiz->dir = llrb_remover_no(raiz->dir, chave);
+    }
+    return balanceia(raiz);
+}
 
 bool llrb_remover(LLRB *T, int chave){
     if(T != NULL){
-        NO *res = llrb_remover_no(&T->raiz, chave);
+        NO *res = llrb_remover_no(T->raiz, chave);
         if(res != NULL){
-            T->raiz->cor = false;
+            T->raiz = res;
+            T->raiz->cor = BLACK;
             return true;
         }
     }

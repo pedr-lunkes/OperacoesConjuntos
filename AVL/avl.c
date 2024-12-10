@@ -168,31 +168,50 @@ bool avl_inserir(AVL *T, ITEM *item){
     return false;
 }
 
-void troca_max_esq(NO *raiz, NO *ant, NO *troca){
-    if(troca->dir != NULL){
-        troca_max_esq(raiz, troca, troca->dir);
-        return;
+NO *min(NO *raiz){
+    NO *aux = raiz;
+    NO *tmp = raiz->esq;
+
+    while(tmp != NULL){
+        aux = tmp;
+        tmp = tmp->esq;
     }
-    
-    if(ant == raiz)
-        ant->esq = troca->esq;
-    else
-        ant->dir = troca->esq;
-    
-    item_apagar(&(raiz->item));
-    raiz->item = troca->item;
-    free(troca);
-    troca = NULL;
-    return;
+
+    return aux;
 }
+
+NO *removeMin(NO *raiz){
+    if(raiz->esq == NULL){
+        NO *aux = raiz->dir;
+        free(raiz);
+        raiz = NULL;
+        return aux;
+    }
+
+    raiz->esq = removeMin(raiz->esq);
+
+    if(raiz->FB == -2)
+        if(raiz->dir->FB <= 0)
+            raiz = rodar_esquerda(raiz);
+        else
+            raiz = rodar_direita_esquerda(raiz);
+    else if(raiz->FB == 2)
+        if(raiz->esq->FB >= 0)
+            raiz = rodar_direita(raiz);
+        else
+            raiz = rodar_esquerda_direita(raiz);
+
+    return raiz;
+}
+
 
 NO *avl_remover_no(NO **raiz, int chave){
     if(*raiz == NULL)
         return NULL;
 
     if(item_get_chave((*raiz)->item) == chave){
-        NO *p = *raiz;
         if((*raiz)->esq == NULL || (*raiz)->dir == NULL){
+            NO *p = *raiz;
             if((*raiz)->esq == NULL)
                 *raiz = (*raiz)->dir;
             else
@@ -201,8 +220,12 @@ NO *avl_remover_no(NO **raiz, int chave){
             item_apagar(&(p->item));
             free(p);
             p = NULL;
-        } else
-            troca_max_esq(*raiz, *raiz, (*raiz)->esq);
+        } else{
+            NO *p = min((*raiz)->dir);
+            item_apagar(&(*raiz)->item);
+            (*raiz)->item = p->item;
+            (*raiz)->dir = removeMin((*raiz)->dir);
+        }
     }
 
     else if(item_get_chave((*raiz)->item) > chave)
