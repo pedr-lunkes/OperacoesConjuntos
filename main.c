@@ -1,4 +1,11 @@
-#include "set.h"
+/*
+AUTORIA:
+    # Pedro Henrique de Sousa Prestes - 15507819
+    # Pedro Lunkes Villela - 15484287
+*/
+
+
+#include "SET/set.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,26 +36,42 @@ int main(int argc, char *argv[])
     scanf("%d", &op);
 
     switch(op){
-        case 1: {
-            //pertence
-            break;
-        }
-        case 2: {
-            //união
+        case 1: { // Pertence
+            int busca;
+            scanf("%d", &busca);
+
+            if(set_pertence(A, busca)) printf("Pertence\n");
+            else printf("Não pertence");
 
             break;
         }
-        case 3: {
-            //intersecção
+        case 2: {  // União
+            SET* U = set_uniao(A, B);
+            set_imprimir(U);
+
+            set_apagar(&U);
             break;
         }
-        case 4: {
-            //remoção
+        case 3: { // Intersecção
+            SET* I = set_interseccao(A, B);
+            set_imprimir(I);
+
+            set_apagar(&I);
+            break;
+        }
+        case 4: { // Remoção
+            int remove;
+            scanf("%d", &remove);
+
+            set_remover(A, remove);
+            set_imprimir(A);
+
             break;
             }
     }
 
-    // apagar
+    set_apagar(&A);
+    set_apagar(&B);
 
     return 0;
 }
