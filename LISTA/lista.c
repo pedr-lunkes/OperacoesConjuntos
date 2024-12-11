@@ -3,14 +3,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+/* A função lista possui os seguintes campos:
+ * lista - Elementos inteiros dentro da lista.
+ * tamanho - Número de elementos na lista.
+ * max - Número máximo de elementos que é possível inserir na lista.
+ */
 typedef struct lista_{
     int *lista;
     int tamanho;
     int max;
 } LISTA;
 
-
+// Cria uma lista alocando memória para a estrutura de dados.
 LISTA *lista_criar(){
     LISTA *l = (LISTA *) malloc(sizeof(LISTA));
     if(l != NULL){
@@ -26,6 +30,7 @@ LISTA *lista_criar(){
     return l;
 }
 
+// Recebe o endereço da lista e apaga os itens e a estrutura em si.
 void lista_apagar(LISTA **lista){
     if(*lista != NULL){     
         free((*lista)->lista);   
@@ -36,12 +41,14 @@ void lista_apagar(LISTA **lista){
     return;
 }
 
+// Utiliza o campo tamanho e compara com o campo max da lista para saber se ela está completamente cheia.
 bool lista_cheia(LISTA *lista){
     if(lista == NULL) return false;
     if(lista->max == lista->tamanho) return true;
     return false;
 }
 
+// Utiliza o campo tamanho da lista e verifica se ele é igual a zero, indicando que não há elementos na lista.
 bool lista_vazia(LISTA *lista){
     if(lista != NULL)
         return lista->tamanho == 0;
@@ -49,6 +56,7 @@ bool lista_vazia(LISTA *lista){
     return true;
 }
 
+// Utiliza busca binária para achar um valor na lista (pertence) ou encontrar a posição de inserção (inserir).
 int lista_busca(LISTA *lista, int val){
     int inf = 0;
     int sup = lista->tamanho;
@@ -75,6 +83,7 @@ int lista_busca(LISTA *lista, int val){
     return inf;
 }
 
+// Função que percorre a lista em busca do elemento e faz os deslocamentos necessários
 bool lista_inserir_posicao(LISTA *lista, int pos, int item){
     if(pos == -1) pos = 0;
     if(pos == -2) pos = lista->tamanho;
@@ -88,6 +97,7 @@ bool lista_inserir_posicao(LISTA *lista, int pos, int item){
     return true;
 }
 
+// Realoca o tamanho da lista caso chegue ao limite de memória previamente alocado.
 void lista_realoc(LISTA *lista){
     if(lista_cheia(lista)){
         if((lista->lista = (int *) realloc(lista->lista, sizeof(int) * (lista->max + REALOC))) == NULL){
@@ -99,6 +109,7 @@ void lista_realoc(LISTA *lista){
     }
 }
 
+// Função de interface para o usuário inserir na lista, chama a busca para verificar a posição e insere na posição com a inserir_posição.
 bool lista_inserir(LISTA *lista, int item){
     lista_realoc(lista);
     int x = lista_busca(lista, item);
@@ -106,6 +117,7 @@ bool lista_inserir(LISTA *lista, int item){
     return(lista_inserir_posicao(lista, x, item));
 }
 
+// Retorna o campo tamanho da lista que representa os números de itens inseridos.
 int lista_tamanho(LISTA *lista){
     if(lista != NULL)
         return lista->tamanho;
@@ -113,6 +125,7 @@ int lista_tamanho(LISTA *lista){
     return 0;
 }
 
+// Percorre a lista utilizando o printf para printar o conteúdo da lista no terminal.
 void lista_imprimir(LISTA *lista){
     if(lista != NULL){
         for(int i = 0; i < lista->tamanho; i++){
@@ -123,6 +136,7 @@ void lista_imprimir(LISTA *lista){
     return;
 }
 
+// Função auxiliar que remove o item da lista e faz o shift dos demais para não ter buracos.
 bool lista_remover_posicao(LISTA *lista, int pos){
     if(pos >= 0){
         for(int i = pos; i < lista->tamanho - 1; i++){
@@ -136,11 +150,13 @@ bool lista_remover_posicao(LISTA *lista, int pos){
     return false;
 }
 
+// Função de interface para o usuário requisitar a remoção de um item da lista.
 bool lista_remover(LISTA *lista, int item){
     int x = lista_busca(lista, item);
     return(lista_remover_posicao(lista, x));
 }
 
+// Cria uma terceira lista e percorre as duas listas passadas para a função de forma intercalada produzindo uma nova lista com todos os elementos de ambas.
 LISTA* lista_uniao(LISTA* A, LISTA* B){
     int indA = 0;
     int indB = 0;
@@ -190,6 +206,7 @@ LISTA* lista_uniao(LISTA* A, LISTA* B){
     return C;
 }
 
+// Cria uma terceira lista e percorre as duas listas passadas para a função de forma intercalada produzindo uma nova lista com os elementos em comum de ambas.
 LISTA* lista_interseccao(LISTA* A, LISTA* B){
     int indA = 0;
     int indB = 0;
@@ -217,6 +234,7 @@ LISTA* lista_interseccao(LISTA* A, LISTA* B){
     return C;
 }
 
+// Função de interface para o usuário que busca o item na lista com a função busca.
 bool lista_pertence(LISTA *A, int item){
     int x = lista_busca(A, item);
 

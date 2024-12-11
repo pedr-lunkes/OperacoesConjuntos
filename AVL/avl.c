@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include "avl.h"
 
+/* A função lista possui os seguintes campos:
+ * esq - Filho esquerdo do nó na árvore.
+ * dir - Filho direito do nó na árvore.
+ * pai - Pai do nó na árvore.
+ * dado - dado correspondente ao nó.
+ * FB - Fator de balanceamento usado para realizar as rotações na AVL
+ * altura - Altura do nó na árvore.
+ */
 typedef struct no_{
     struct no_ *esq;
     struct no_ *dir;
@@ -11,10 +19,12 @@ typedef struct no_{
     int altura;
 } NO;
 
+// A estrutura AVL é simples e possui somente um nó para acessar sua raiz.
 typedef struct avl_{
     NO *raiz;
 } AVL;
 
+// Cria uma árvore AVL alocando memória para a estrutura de dados.
 AVL *avl_criar(void){
     AVL *T = (AVL *) malloc(sizeof(AVL));
 
@@ -24,6 +34,7 @@ AVL *avl_criar(void){
     return T;
 }
 
+// Apaga recursivamente os nós da árvore percorrendo as sub-árvores esquerda e direita.
 void avl_apagar_no(NO **raiz){
     if(*raiz != NULL){
         avl_apagar_no(&(*raiz)->esq);
@@ -35,6 +46,7 @@ void avl_apagar_no(NO **raiz){
     return;
 }
 
+// Recebe o endereço da AVL e chama a função apagar_no para depois apagar a árvore em si.
 void avl_apagar(AVL **T){
     if(*T != NULL){
         avl_apagar_no(&(*T)->raiz);
@@ -45,6 +57,7 @@ void avl_apagar(AVL **T){
     return;
 }
 
+// Fornece altura de um nó de forma que o raiz->altura não seja acessado de um nó NULL.
 int avl_altura_no(NO *raiz){
     if(raiz != NULL)
         return raiz->altura;
@@ -52,6 +65,7 @@ int avl_altura_no(NO *raiz){
     return -1;
 }
 
+// Fornece a altura da árvore retornando a altura da raiz da árvore.
 int avl_altura(AVL *T){
     if(T != NULL)
         return avl_altura_no(T->raiz);
@@ -59,6 +73,7 @@ int avl_altura(AVL *T){
     return ERRO;
 }
 
+// Imprime o conteúdo da árvore em pré-ordem percorrendo recursivamente as sub-árvores esquerda e direita do nó.
 void avl_imprimir_no(NO *raiz){
     // Pre-Ordem
     if(raiz != NULL){
@@ -70,12 +85,14 @@ void avl_imprimir_no(NO *raiz){
     return;
 }
 
+// Função de interface para o usuário imprimir o conteúdo da árvore usando a função auxiliar imprimir_no.
 void avl_imprimir(AVL *T){
     if(T != NULL)
         avl_imprimir_no(T->raiz);
     return;
 }
 
+// Função utilizada para alocar memória para um nó e inicializar os seus campos.
 NO *avl_cria_no(int dado){
     NO *no = (NO *) malloc(sizeof(NO));
 
@@ -91,6 +108,7 @@ NO *avl_cria_no(int dado){
     return no;
 }
 
+// Utiliza a lógica de rotação direita em uma AVL.
 NO *avl_rodar_direita(NO *a){
     NO *b = a->esq;
 
@@ -113,6 +131,7 @@ NO *avl_rodar_direita(NO *a){
     return b;
 }
 
+// Utiliza a lógica de rotação esquerda em uma AVL.
 NO *avl_rodar_esquerda(NO *a){
     NO *b = a->dir;
 
@@ -135,16 +154,19 @@ NO *avl_rodar_esquerda(NO *a){
     return b;
 }
 
+// Utiliza a lógica de rotação esquerda-direita em uma AVL chamando as funções de rotação esquerda e direita.
 NO *avl_rodar_esquerda_direita(NO *a){
     a->esq = avl_rodar_esquerda(a->esq);
     return avl_rodar_direita(a);
 }
 
+// Utiliza a lógica de rotação direita-esquerda em uma AVL chamando as funções de rotação direita e esquerda.
 NO *avl_rodar_direita_esquerda(NO *a){
     a->dir = avl_rodar_direita(a->dir);
     return avl_rodar_esquerda(a);
 }
 
+// Insere em um AVL fazendo a busca usando a lógica de uma ABB de forma recursiva e faz o rebalanceamento na volta da recursão.
 NO *avl_inserir_no(NO *raiz, int dado){
     if(raiz == NULL){
         NO *novo = avl_cria_no(dado);
@@ -179,6 +201,7 @@ NO *avl_inserir_no(NO *raiz, int dado){
     return raiz;
 }
 
+// Função interface do usuário para inserir um dado na AVL, retorna o booleano indicando se foi bem-sucedido.
 bool avl_inserir(AVL *T, int dado){
     if(T != NULL){
         NO *aux = avl_inserir_no(T->raiz, dado);
@@ -191,6 +214,7 @@ bool avl_inserir(AVL *T, int dado){
     return false;
 }
 
+// Usa a lógica de busca para encontrar o menor elemento de uma sub-árvore para a troca no caso de remoção de nó com duas sub-árvores.
 NO *avl_min(NO *raiz){
     NO *aux = raiz;
     NO *tmp = raiz->esq;
@@ -203,6 +227,7 @@ NO *avl_min(NO *raiz){
     return aux;
 }
 
+// Remove o menor elemento de uma sub-árvore para a troca no caso de remoção de nó com duas sub-árvores, faz o rebalanceamento na volta da recursão.
 NO *avl_remove_min(NO *raiz){
     if(raiz->esq == NULL){
         NO *aux = raiz->dir;
@@ -227,7 +252,9 @@ NO *avl_remove_min(NO *raiz){
     return raiz;
 }
 
-
+// Função que faz a busca na árvore a faz a remoção do nó de chave fornecida.
+// Trata os casos de remoção da AVL manipulando os ponteiros de nó, reduz os casos de um e dois sub-árvores ao mesmo e
+// usa o min e remove_min para casos de duas sub-árvores, rebalanceia a árvore na volta da recursão.
 NO *avl_remover_no(NO **raiz, int chave){
     if(*raiz == NULL)
         return NULL;
@@ -274,12 +301,14 @@ NO *avl_remover_no(NO **raiz, int chave){
     return *raiz;
 }
 
+// Função de interface para o usuário remover um nó da árvore dada uma chave fornecida, retorna se a operação foi bem-sucedida.
 bool avl_remover(AVL *T, int chave){
     if(T != NULL)
         return avl_remover_no(&(T->raiz), chave) != NULL;
     return false;
 }
 
+// Busca um nó na árvore dada uma chave utilizando a lógica de busca em uma ABB e de maneira recursiva.
 NO *avl_busca_no(NO *raiz, int chave){
     if(raiz == NULL)
         return NULL;
@@ -292,12 +321,15 @@ NO *avl_busca_no(NO *raiz, int chave){
         return raiz;
 }
 
+// Função de interface para que o usuário possa realizar a busca em uma AVL fornecendo uma chave, retorna o nó em questão.
 NO *avl_pertence(AVL *T, int chave){
     if(T != NULL)
         return avl_busca_no(T->raiz, chave);
     return false;
 }
 
+
+// Função que verifica se a raiz da AVL possui algum conteúdo, implicando que ela está vazia.
 bool avl_vazia(AVL *T){
     if(T != NULL)
         return T->raiz == NULL;
@@ -305,7 +337,7 @@ bool avl_vazia(AVL *T){
     return true;
 }
 
-
+// Função que retorna o menor nó de uma sub-árvore utilizada para as operações de conjunto.
 NO *avl_menor_no(NO* raiz){
     if(raiz == NULL) return NULL;
 
