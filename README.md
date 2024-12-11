@@ -77,3 +77,8 @@ Foi criado um gerador de casos teste, que pode ser utilizado com os scripts bash
 chmod +x geraCaso.sh
 chmod +x rodaCaso.sh
 ```
+
+Depois, basta informar quantos casos serão criados/testados
+```
+./geraCaso.sh 50  // exemplo de utilização
+```
