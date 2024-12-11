@@ -348,6 +348,7 @@ NO *avl_menor_no(NO* raiz){
     return raiz;
 }
 
+// 
 NO* avl_prox_no(NO* raiz){
     if(raiz == NULL) return NULL;
     if(raiz->dir != NULL) return avl_menor_no(raiz->dir);
